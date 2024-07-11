@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[options]
+packages = ["podcast_transcript_convert"]
+
+[tool.setuptools]
+packages = ["podcast_transcript_convert"]
+
+[project]
+name = "podcast-transcript-convert"
+version = "0.1.0"
+description = "Convert podcast transcripts from HTML, SRT, WebVtt, Podlove etc into PodcastIndex JSON."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Harold Martin", email = "Harold.Martin@gmail.com" },
+]
+keywords = ["convert", "podcast", "podcastindex", "transcripts", "srt", "vtt", "webvtt", "podlove", "pci"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+dependencies = ["beautifulsoup4", "loguru", "lxml", "webvtt-py"]
+
+[project.optional-dependencies]
+lint = ["pyroma", "pytype", "ruff", "pytest"]
+
+[project.scripts]
+transcript2json = "podcast_transcript_convert.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/hbmartin/podcast-transcript-convert"
+
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [".bzr", ".direnv", ".eggs", ".git", ".git-rewrite", ".hg", ".ipynb_checkpoints", ".mypy_cache", ".nox", ".pants.d", ".pyenv", ".pytest_cache", ".pytype", ".ruff_cache", ".svn", ".tox", ".venv", ".vscode", "__pypackages__", "_build", "buck-out", "build", "dist", "node_modules", "setup.py", "site-packages", "venv"]
+
+# Same as Black.
+line-length = 88
+indent-width = 4
+target-version = "py311"
+
+lint.select = ["ALL"]
+lint.ignore = ["D100", "D101", "D103", "D104", "D107", "D203", "D213", "S608"]
+
+[tool.ruff.format]
+# Same as Black.
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN201", "E501", "PLR2004", "PT011", "S101"]
+
+[tool.pytest.ini_options]
+pythonpath = ". venv/lib/python3.12/site-packages"
+testpaths = "tests"
