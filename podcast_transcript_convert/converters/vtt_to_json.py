@@ -37,7 +37,11 @@ def vtt_to_podcast_dict(vtt_string: str) -> dict:
 
 
 # https://www.w3.org/TR/webvtt1/#file-structure
-def vtt_file_to_json_file(vtt_file: str, json_file: str, metadata: dict | None) -> None:
+def vtt_file_to_json_file(
+    vtt_file: str | Path,
+    json_file: str | Path,
+    metadata: dict | None,
+) -> None:
     vtt_string = Path(vtt_file).read_text()
     try:
         transcript_dict = vtt_to_podcast_dict(vtt_string)

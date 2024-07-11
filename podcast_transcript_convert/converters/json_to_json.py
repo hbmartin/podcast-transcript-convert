@@ -5,8 +5,8 @@ from loguru import logger  # type: ignore[import-not-found]
 
 
 def json_file_to_json_file(
-    origin_file: str,
-    destination_file: str,
+    origin_file: str | Path,
+    destination_file: str | Path,
     metadata: dict | None,
 ) -> None:
     try:

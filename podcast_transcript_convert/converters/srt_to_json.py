@@ -45,7 +45,11 @@ def srt_to_podcast_dict(srt_string: str) -> dict:
     }
 
 
-def srt_file_to_json_file(srt_file: str, json_file: str, metadata: dict | None) -> None:
+def srt_file_to_json_file(
+    srt_file: str | Path,
+    json_file: str | Path,
+    metadata: dict | None,
+) -> None:
     srt_string = Path(srt_file).read_text()
     try:
         transcript_dict = srt_to_podcast_dict(srt_string)
