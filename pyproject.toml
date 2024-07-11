@@ -7,7 +7,7 @@ only-packages = true
 
 [project]
 name = "podcast-transcript-convert"
-version = "0.1.1"
+version = "0.1.2"
 description = "Convert podcast transcripts from HTML, SRT, WebVtt, Podlove etc into PodcastIndex JSON."
 readme = "README.md"
 requires-python = ">=3.11"

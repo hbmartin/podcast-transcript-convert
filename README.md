@@ -19,6 +19,12 @@ brew install pipx
 pipx install podcast-transcript-convert
 ```
 
+If you've already installed the package and wish to upgrade:
+
+```bash
+pipx upgrade podcast-transcript-convert
+```
+
 ## Usage
 Run the conversion app on your transcripts directory.
 
