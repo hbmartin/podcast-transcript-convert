@@ -7,9 +7,9 @@
 [![Checked with pytype](https://img.shields.io/badge/🦆-pytype-437f30.svg)](https://google.github.io/pytype/)
 [![twitter](https://img.shields.io/badge/@hmartin-00aced.svg?logo=twitter&logoColor=black)](https://twitter.com/hmartin)
 
-Convert podcast transcripts from HTML, SRT, WebVtt, Podlove etc into [PodcastIndex JSON](https://github.com/Podcastindex-org/podcast-namespace/blob/main/transcripts/transcripts.md).
-
 <img src=".idea/icon.svg" width="100" align="right">
+
+Convert podcast transcripts from HTML, SRT, WebVtt, Podlove etc into [PodcastIndex JSON](https://github.com/Podcastindex-org/podcast-namespace/blob/main/transcripts/transcripts.md).
 
 ## Installation
 
@@ -67,3 +67,4 @@ This project is linted with [ruff](https://docs.astral.sh/ruff/) and uses [Black
 
 ## Authors
 - [Harold Martin](https://www.linkedin.com/in/harold-martin-98526971/) - harold.martin at gmail
+- Icon courtesy of [Vecteezy.com](https://www.vecteezy.com)

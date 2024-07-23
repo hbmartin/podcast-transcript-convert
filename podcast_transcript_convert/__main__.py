@@ -9,7 +9,7 @@ from .convert import bulk_convert
 def main() -> None:
     if len(sys.argv) < 3:  # noqa: PLR2004
         logger.error(
-            "Usage: convert <source> <output> <opt. ignore file>",
+            "Usage: transcript2json <source> <output> <opt. ignore file>",
         )
         sys.exit(1)
 
