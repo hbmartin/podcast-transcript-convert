@@ -30,7 +30,9 @@ def main() -> None:
             destination.mkdir(parents=True, exist_ok=True)
 
     bulk_convert(
-        transcript_path=sys.argv[1], destination_path=sys.argv[2], ignore=ignore_list,
+        transcript_path=sys.argv[1],
+        destination_path=sys.argv[2],
+        ignore=ignore_list,
     )
 
 

@@ -9,6 +9,7 @@
 
 Convert podcast transcripts from HTML, SRT, WebVtt, Podlove etc into [PodcastIndex JSON](https://github.com/Podcastindex-org/podcast-namespace/blob/main/transcripts/transcripts.md).
 
+<img src=".idea/icon.svg" width="100" align="right">
 
 ## Installation
 
