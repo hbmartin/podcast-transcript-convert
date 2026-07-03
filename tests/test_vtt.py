@@ -35,12 +35,13 @@ def test_vtt_to_podcast_dict_with_some_speaker_and_note():
     assert transcript_dict["segments"][0]["endTime"] == 3.938
     assert (
         transcript_dict["segments"][0]["body"]
-        == "Michael: Hello, and welcome to Postgres FM, a new weekly show"
+        == "Hello, and welcome to Postgres FM, a new weekly show"
     )
-    assert "speaker" not in transcript_dict["segments"][0]
+    assert transcript_dict["segments"][0]["speaker"] == "Michael"
     assert transcript_dict["segments"][-1]["startTime"] == 1971.997
     assert transcript_dict["segments"][-1]["endTime"] == 1972.267
-    assert transcript_dict["segments"][-1]["body"] == "Nikolay: Bye."
+    assert transcript_dict["segments"][-1]["body"] == "Bye."
+    assert transcript_dict["segments"][-1]["speaker"] == "Nikolay"
 
 
 def test_vtt_to_podcast_dict_with_numbered_blocks():

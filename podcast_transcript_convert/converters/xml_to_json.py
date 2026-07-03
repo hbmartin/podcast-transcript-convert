@@ -1,38 +1,38 @@
 from json import dumps
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from bs4 import BeautifulSoup, PageElement
+from bs4 import BeautifulSoup, Tag
 
 from podcast_transcript_convert.errors import InvalidXmlError, NoTranscriptFoundError
+from podcast_transcript_convert.file_utils import read_text_robust, write_text_utf8
+from podcast_transcript_convert.models import Segment, Transcript
 
 from .srt_to_json import _mts_to_secs_float
 
-if TYPE_CHECKING:
-    from collections.abc import Iterable
 
-
-def _xml_to_list(soup: BeautifulSoup) -> list[dict]:
-    blocks: list[dict] = [{}]
-    children: Iterable[PageElement] = soup.transcripts.children  # type: ignore[attr-defined]
-    for child in children:
-        if child.name == "speech":  # type: ignore[attr-defined]
-            if "body" in blocks[-1]:
-                blocks.append({})
-            for item in child.children:  # type: ignore[attr-defined]
-                if item.name == "item":
-                    if "body" not in blocks[-1]:
-                        blocks[-1]["body"] = item.text
-                    else:
-                        blocks[-1]["body"] += f" {item.text}"
-
-                    if "startTime" not in blocks[-1]:
-                        blocks[-1]["startTime"] = _mts_to_secs_float(item["start"])
-
-                    blocks[-1]["endTime"] = _mts_to_secs_float(item["end"])
-    if blocks[0] == {}:
+def _xml_to_segments(soup: BeautifulSoup) -> list[Segment]:
+    segments: list[Segment] = [Segment()]
+    transcripts = soup.find("transcripts")
+    if not isinstance(transcripts, Tag):
         raise NoTranscriptFoundError
-    return blocks
+    for child in transcripts.children:
+        if isinstance(child, Tag) and child.name == "speech":
+            if segments[-1].body is not None:
+                segments.append(Segment())
+            for item in child.children:
+                if isinstance(item, Tag) and item.name == "item":
+                    if segments[-1].body is None:
+                        segments[-1].body = item.text
+                    else:
+                        segments[-1].body += f" {item.text}"
+
+                    if segments[-1].start_time is None:
+                        segments[-1].start_time = _mts_to_secs_float(str(item["start"]))
+
+                    segments[-1].end_time = _mts_to_secs_float(str(item["end"]))
+    if not segments[0].to_dict():
+        raise NoTranscriptFoundError
+    return segments
 
 
 def xml_to_podcast_dict(xml_string: str) -> dict:
@@ -41,10 +41,7 @@ def xml_to_podcast_dict(xml_string: str) -> dict:
     else:
         raise InvalidXmlError
 
-    return {
-        "version": "1.0.0",
-        "segments": _xml_to_list(soup),
-    }
+    return Transcript(segments=_xml_to_segments(soup)).to_dict()
 
 
 def xml_file_to_json_file(
@@ -52,15 +49,13 @@ def xml_file_to_json_file(
     json_file: str | Path,
     metadata: dict | None,
 ) -> None:
-    xml_string = Path(xml_file).read_text()
+    xml_string = read_text_robust(xml_file)
     try:
         transcript_dict = xml_to_podcast_dict(xml_string)
         if metadata:
             transcript_dict["metadata"] = metadata
     except InvalidXmlError as e:
-        e.add_note(xml_file)
+        e.add_note(str(xml_file))
         raise
 
-    Path(json_file).write_text(
-        data=dumps(transcript_dict, indent=4),
-    )
+    write_text_utf8(json_file, dumps(transcript_dict, indent=4))

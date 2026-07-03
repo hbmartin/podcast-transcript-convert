@@ -6,29 +6,21 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.13", "3.14"]
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      id: cpython3
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
       with:
         python-version: ${{ matrix.python-version }}
-        cache: pip
-        cache-dependency-path: pyproject.toml
-    - run: pip install -e '.[lint]'
-    - run: ruff check .
-    - name: Run pytype if not on 3.12
-      run: |
-        if [[ '${{ steps.cpython3.outputs.python-version }}' == *"3.12"* ]]; then
-          echo "pytype does not support 3.12: https://github.com/google/pytype/issues/1475"
-        else
-          pytype -j auto podcast_transcript_convert
-        fi
+        enable-cache: true
+    - run: uv sync --group dev
+    - run: uv run ruff check .
+    - run: uv run ty check podcast_transcript_convert
+    - run: uv run pyrefly check
     - uses: psf/black@stable
       with:
         options: "--check --verbose"
-    - run: pytest
-    - run: pyroma . --min=10
-    - run: |
-        python -m podcast_transcript_convert |& grep -q 'Usage: transcript2json'
+    - run: uv run pytest --cov=podcast_transcript_convert --cov-report=term-missing
+    - run: uv run pyroma . --min=10
+    - run: uv run python -m podcast_transcript_convert --help | grep -q 'usage: transcript2json'

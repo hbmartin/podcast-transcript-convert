@@ -3,6 +3,8 @@ from pathlib import Path
 
 from loguru import logger  # type: ignore[import-not-found]
 
+from podcast_transcript_convert.file_utils import read_text_robust, write_text_utf8
+
 
 def json_file_to_json_file(
     origin_file: str | Path,
@@ -10,9 +12,9 @@ def json_file_to_json_file(
     metadata: dict | None,
 ) -> None:
     try:
-        data = json.loads(Path(origin_file).read_text())
+        data = json.loads(read_text_robust(origin_file))
     except json.JSONDecodeError as e:
-        e.add_note(origin_file)
+        e.add_note(str(origin_file))
         raise
 
     if "version" not in data or "segments" not in data:
@@ -22,9 +24,4 @@ def json_file_to_json_file(
     if metadata:
         data["metadata"] = metadata
 
-    Path(destination_file).write_text(
-        data=json.dumps(
-            data,
-            indent=4,
-        ),
-    )
+    write_text_utf8(destination_file, json.dumps(data, indent=4))
