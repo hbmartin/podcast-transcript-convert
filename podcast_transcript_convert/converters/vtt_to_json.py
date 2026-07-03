@@ -5,8 +5,24 @@ import webvtt  # type: ignore[import-not-found]
 from webvtt.errors import MalformedFileError
 
 from podcast_transcript_convert.errors import InvalidVttError
+from podcast_transcript_convert.file_utils import read_text_robust, write_text_utf8
+from podcast_transcript_convert.models import Segment, Transcript, split_speaker_prefix
 
 from .srt_to_json import _mts_to_secs_float
+
+
+def _caption_to_segment(caption: webvtt.Caption) -> Segment:
+    body = caption.text.strip().replace("\n", " ")
+    if caption.voice:
+        speaker = caption.voice
+    else:
+        speaker, body = split_speaker_prefix(body)
+    return Segment(
+        body=body,
+        start_time=_mts_to_secs_float(caption.start),
+        end_time=_mts_to_secs_float(caption.end),
+        speaker=speaker,
+    )
 
 
 def vtt_to_podcast_dict(vtt_string: str) -> dict:
@@ -14,26 +30,9 @@ def vtt_to_podcast_dict(vtt_string: str) -> dict:
         vtt = webvtt.from_string(vtt_string)
     except MalformedFileError as e:
         raise InvalidVttError from e
-    return {
-        "version": "1.0.0",
-        "segments": [
-            (
-                {
-                    "startTime": _mts_to_secs_float(caption.start),
-                    "endTime": _mts_to_secs_float(caption.end),
-                    "body": caption.text.strip().replace("\n", " "),
-                    "speaker": caption.voice,
-                }
-                if caption.voice
-                else {
-                    "startTime": _mts_to_secs_float(caption.start),
-                    "endTime": _mts_to_secs_float(caption.end),
-                    "body": caption.text.strip().replace("\n", " "),
-                }
-            )
-            for caption in vtt.captions
-        ],
-    }
+    return Transcript(
+        segments=[_caption_to_segment(caption) for caption in vtt.captions],
+    ).to_dict()
 
 
 # https://www.w3.org/TR/webvtt1/#file-structure
@@ -42,14 +41,12 @@ def vtt_file_to_json_file(
     json_file: str | Path,
     metadata: dict | None,
 ) -> None:
-    vtt_string = Path(vtt_file).read_text()
+    vtt_string = read_text_robust(vtt_file)
     try:
         transcript_dict = vtt_to_podcast_dict(vtt_string)
         if metadata:
             transcript_dict["metadata"] = metadata
     except InvalidVttError as e:
-        e.add_note(vtt_file)
+        e.add_note(str(vtt_file))
         raise
-    Path(json_file).write_text(
-        data=dumps(transcript_dict, indent=4),
-    )
+    write_text_utf8(json_file, dumps(transcript_dict, indent=4))

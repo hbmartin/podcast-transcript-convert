@@ -1,5 +1,6 @@
 import sqlite3
 from collections.abc import Iterable
+from contextlib import closing
 from sqlite3 import Connection
 
 from .constants import (
@@ -63,7 +64,7 @@ def list_files_from_db(
     files = []
     metadatas = {}
 
-    with sqlite3.connect(db_path) as con:
+    with closing(sqlite3.connect(db_path)) as con:
         for file, data in _select_transcript_paths(con):
             if not _is_file_allowed(filename=file.split("/")[-1], ignore=ignore):
                 continue

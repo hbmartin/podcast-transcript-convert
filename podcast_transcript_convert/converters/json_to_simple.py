@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from podcast_transcript_convert.errors import NoStartTimeError
+from podcast_transcript_convert.file_utils import read_text_robust, write_text_utf8
 
 
 def _number_to_ts(seconds: float) -> str:
@@ -29,7 +30,7 @@ def json_file_to_simple_file(
     destination_file: str | Path,
 ) -> None:
     try:
-        data = json.loads(Path(origin_file).read_text())
+        data = json.loads(read_text_robust(origin_file))
     except json.JSONDecodeError as e:
         e.add_note(str(origin_file))
         raise
@@ -40,4 +41,4 @@ def json_file_to_simple_file(
         e.add_note(str(origin_file))
         raise
 
-    Path(destination_file).write_text("\n".join(segments))
+    write_text_utf8(destination_file, "\n".join(segments))

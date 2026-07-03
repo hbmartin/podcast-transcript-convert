@@ -25,9 +25,10 @@ def test_srt_to_podcast_dict():
     transcript_dict = srt_to_podcast_dict(srt_string)
     assert transcript_dict["version"] == "1.0.0"
     assert len(transcript_dict["segments"]) == 724
+    assert transcript_dict["segments"][0]["speaker"] == "Michael"
     assert (
         transcript_dict["segments"][0]["body"]
-        == "Michael: Hello, and welcome to PostgresFM, a weekly show about"
+        == "Hello, and welcome to PostgresFM, a weekly show about"
     )
     assert transcript_dict["segments"][0]["startTime"] == 0.060
     assert transcript_dict["segments"][0]["endTime"] == 2.680
@@ -68,9 +69,10 @@ def test_srt_to_podcast_dict_with_period_ts():
 def test_srt_to_podcast_dict_with_newlines_in_body():
     srt_string = Path("tests/fixtures/Yak Shaving with Tim Mitra.srt").read_text()
     transcript_dict = srt_to_podcast_dict(srt_string)
+    assert transcript_dict["segments"][0]["speaker"] == "Leo Dion (host)"
     assert (
         transcript_dict["segments"][0]["body"]
-        == "Leo Dion (host): Before we begin today's episode, I wanted to let you know Bright Digit needs your help."
+        == "Before we begin today's episode, I wanted to let you know Bright Digit needs your help."
     )
     assert transcript_dict["segments"][881]["body"] == "?   Yeah."
     assert transcript_dict["segments"][-1]["body"] == "Bye everyone."
