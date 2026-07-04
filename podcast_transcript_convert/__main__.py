@@ -82,12 +82,25 @@ def _read_ignore_list(ignore_file: Path | None) -> list[str]:
     ]
 
 
-def _convert_single_file(source: Path, destination: Path) -> int:
+def _convert_single_file(
+    source: Path,
+    destination: Path,
+    *,
+    overwrite: bool = False,
+    dry_run: bool = False,
+) -> int:
     if destination.is_dir() or destination.suffix == "":
-        destination.mkdir(parents=True, exist_ok=True)
         destination = destination / (source.stem + ".json")
-    else:
-        destination.parent.mkdir(parents=True, exist_ok=True)
+
+    if destination.exists() and not overwrite:
+        logger.info(f"Skipping existing {destination}")
+        return 1
+
+    if dry_run:
+        logger.info(f"Dry run: would convert {source} -> {destination}")
+        return 0
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
     try:
         convert_file(source, destination)
     except (TranscriptConversionError, OSError) as e:
@@ -106,10 +119,16 @@ def main(argv: list[str] | None = None) -> int:
 
     source = Path(args.source)
     if source.is_file() and source.suffix != ".db":
-        return _convert_single_file(source, Path(args.destination))
+        return _convert_single_file(
+            source,
+            Path(args.destination),
+            overwrite=args.overwrite,
+            dry_run=args.dry_run,
+        )
 
     ignore_list = _read_ignore_list(args.ignore_file)
-    Path(args.destination).mkdir(parents=True, exist_ok=True)
+    if not args.dry_run:
+        Path(args.destination).mkdir(parents=True, exist_ok=True)
 
     summary = bulk_convert(
         transcript_path=args.source,
@@ -118,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
         overwrite=args.overwrite,
         dry_run=args.dry_run,
     )
-    if summary.failed and not summary.converted:
+    if summary.failed or not summary.converted:
         return 1
     return 0
 

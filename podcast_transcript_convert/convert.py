@@ -137,9 +137,12 @@ def bulk_convert(
         logger.warning(f"Unknown: {summary.unknown}")
 
     jobs: list[tuple[str, Converter]] = sorted(
-        (file_path, converter)
-        for file_type, converter in FILE_CONVERTERS.items()
-        for file_path in grouped[file_type]
+        (
+            (file_path, converter)
+            for file_type, converter in FILE_CONVERTERS.items()
+            for file_path in grouped[file_type]
+        ),
+        key=lambda job: job[0],
     )
     destinations = _assign_destinations(
         [file_path for file_path, _ in jobs],

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import podcast_transcript_convert.convert as convert_module
 from podcast_transcript_convert.convert import (
     _assign_destinations,
     _destination_path,
@@ -127,6 +128,35 @@ def test_bulk_convert_dry_run_writes_nothing(tmp_path: Path):
     assert summary.dry_run
     assert len(summary.converted) == 1
     assert not destination.exists()
+
+
+def test_bulk_convert_duplicate_sources_do_not_crash(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "in"
+    source.mkdir()
+    transcript = source / "ep.srt"
+    transcript.write_text(VALID_SRT)
+    destination = tmp_path / "out"
+
+    def duplicate_list_files(directory: str, ignore: list[str]) -> list[str]:
+        assert directory == str(source)
+        assert ignore == []
+        return [str(transcript), str(transcript)]
+
+    monkeypatch.setattr(
+        convert_module,
+        "list_files",
+        duplicate_list_files,
+    )
+
+    summary = convert_module.bulk_convert(str(source), str(destination), dry_run=True)
+
+    assert [src for src, _ in summary.converted] == [
+        str(transcript),
+        str(transcript),
+    ]
 
 
 def test_bulk_convert_ignore_list(tmp_path: Path):

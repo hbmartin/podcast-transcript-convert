@@ -2,6 +2,7 @@ from json import dumps
 from pathlib import Path
 
 import webvtt  # type: ignore[import-not-found]
+from loguru import logger
 from webvtt.errors import MalformedFileError
 
 from podcast_transcript_convert.errors import InvalidVttError
@@ -41,12 +42,15 @@ def vtt_file_to_json_file(
     json_file: str | Path,
     metadata: dict | None,
 ) -> None:
-    vtt_string = read_text_robust(vtt_file)
     try:
+        vtt_string = read_text_robust(vtt_file)
         transcript_dict = vtt_to_podcast_dict(vtt_string)
         if metadata:
             transcript_dict["metadata"] = metadata
     except InvalidVttError as e:
         e.add_note(str(vtt_file))
         raise
+    except FileNotFoundError:
+        logger.error(f"File not found: {vtt_file}")
+        return
     write_text_utf8(json_file, dumps(transcript_dict, indent=4))

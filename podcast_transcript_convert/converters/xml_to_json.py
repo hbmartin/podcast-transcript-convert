@@ -30,9 +30,10 @@ def _xml_to_segments(soup: BeautifulSoup) -> list[Segment]:
                         segments[-1].start_time = _mts_to_secs_float(str(item["start"]))
 
                     segments[-1].end_time = _mts_to_secs_float(str(item["end"]))
-    if not segments[0].to_dict():
+    populated_segments = [segment for segment in segments if segment.to_dict()]
+    if not populated_segments:
         raise NoTranscriptFoundError
-    return segments
+    return populated_segments
 
 
 def xml_to_podcast_dict(xml_string: str) -> dict:

@@ -2,7 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from podcast_transcript_convert.converters.vtt_to_json import vtt_to_podcast_dict
+from podcast_transcript_convert.converters.vtt_to_json import (
+    vtt_file_to_json_file,
+    vtt_to_podcast_dict,
+)
 from podcast_transcript_convert.errors import InvalidVttError
 
 
@@ -69,3 +72,11 @@ def test_vtt_to_podcast_dict_with_numbered_blocks():
 def test_vtt_to_podcast_dict_with_invalid():
     with pytest.raises(InvalidVttError):
         vtt_to_podcast_dict("")
+
+
+def test_vtt_file_to_json_file_missing_file_returns(tmp_path: Path):
+    destination = tmp_path / "out.json"
+
+    vtt_file_to_json_file(tmp_path / "missing.vtt", destination, None)
+
+    assert not destination.exists()
