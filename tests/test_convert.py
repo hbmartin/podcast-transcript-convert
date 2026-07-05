@@ -99,6 +99,34 @@ def test_bulk_convert_continues_after_failure(tmp_path: Path):
     assert (destination / "good.json").exists()
 
 
+def test_bulk_convert_records_missing_vtt_as_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    missing = tmp_path / "missing.vtt"
+    destination = tmp_path / "out"
+
+    def missing_vtt_from_db(
+        db_path: str,
+        ignore: list[str],
+    ) -> tuple[list[str], dict[str, dict[str, str]]]:
+        assert db_path == str(tmp_path / "overcast.db")
+        assert ignore == []
+        return [str(missing)], {}
+
+    monkeypatch.setattr(
+        convert_module,
+        "list_files_from_db",
+        missing_vtt_from_db,
+    )
+
+    summary = convert_module.bulk_convert(str(tmp_path / "overcast.db"), str(destination))
+
+    assert summary.converted == []
+    assert [src for src, _ in summary.failed] == [str(missing)]
+    assert list(destination.rglob("*.json")) == []
+
+
 def test_bulk_convert_skips_existing_unless_overwrite(tmp_path: Path):
     source = tmp_path / "in"
     source.mkdir()
