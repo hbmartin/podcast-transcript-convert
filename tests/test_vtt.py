@@ -74,9 +74,10 @@ def test_vtt_to_podcast_dict_with_invalid():
         vtt_to_podcast_dict("")
 
 
-def test_vtt_file_to_json_file_missing_file_returns(tmp_path: Path):
+def test_vtt_file_to_json_file_missing_file_raises(tmp_path: Path):
     destination = tmp_path / "out.json"
 
-    vtt_file_to_json_file(tmp_path / "missing.vtt", destination, None)
+    with pytest.raises(FileNotFoundError):
+        vtt_file_to_json_file(tmp_path / "missing.vtt", destination, None)
 
     assert not destination.exists()

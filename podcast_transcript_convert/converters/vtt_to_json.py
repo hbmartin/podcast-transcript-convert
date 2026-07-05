@@ -52,5 +52,5 @@ def vtt_file_to_json_file(
         raise
     except FileNotFoundError:
         logger.error(f"File not found: {vtt_file}")
-        return
+        raise
     write_text_utf8(json_file, dumps(transcript_dict, indent=4))

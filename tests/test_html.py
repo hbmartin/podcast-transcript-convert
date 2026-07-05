@@ -4,6 +4,7 @@ import pytest
 
 from podcast_transcript_convert.converters.html_to_json import (
     _ts_to_secs,
+    html_file_to_json_file,
     html_to_podcast_dict,
 )
 from podcast_transcript_convert.errors import InvalidHtmlError
@@ -85,3 +86,12 @@ def test_html_to_podcast_dict_with_ts_looking_in_body():
 def test_html_to_podcast_dict_empty():
     with pytest.raises(InvalidHtmlError):
         html_to_podcast_dict("")
+
+
+def test_html_file_to_json_file_missing_file_raises(tmp_path: Path):
+    destination = tmp_path / "out.json"
+
+    with pytest.raises(FileNotFoundError):
+        html_file_to_json_file(tmp_path / "missing.html", destination, None)
+
+    assert not destination.exists()
