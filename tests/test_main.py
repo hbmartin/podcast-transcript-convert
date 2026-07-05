@@ -59,6 +59,29 @@ def test_main_single_file_to_file(tmp_path: Path):
     assert destination.exists()
 
 
+def test_main_single_file_dry_run_writes_nothing(tmp_path: Path):
+    source = tmp_path / "ep.srt"
+    source.write_text(VALID_SRT)
+    destination = tmp_path / "out"
+
+    assert main(["--dry-run", str(source), str(destination)]) == 0
+    assert not destination.exists()
+
+
+def test_main_single_file_skips_existing_unless_overwrite(tmp_path: Path):
+    source = tmp_path / "ep.srt"
+    source.write_text(VALID_SRT)
+    destination = tmp_path / "converted.json"
+    destination.write_text("original")
+
+    assert main([str(source), str(destination)]) == 1
+    assert destination.read_text() == "original"
+
+    assert main(["--overwrite", str(source), str(destination)]) == 0
+    data = json.loads(destination.read_text())
+    assert data["segments"][0]["body"] == "Hello world."
+
+
 def test_main_single_file_failure_exits_nonzero(tmp_path: Path):
     source = tmp_path / "bad.srt"
     source.write_text("this is not valid srt")
@@ -74,7 +97,35 @@ def test_main_dry_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     destination = tmp_path / "out"
 
     assert main(["--dry-run", str(source), str(destination)]) == 0
-    assert not (destination / "ep.json").exists()
+    assert not destination.exists()
+
+
+def test_main_bulk_partial_failure_exits_nonzero(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / "in"
+    source.mkdir()
+    (source / "good.srt").write_text(VALID_SRT)
+    (source / "bad.srt").write_text("this is not valid srt")
+    destination = tmp_path / "out"
+
+    assert main([str(source), str(destination)]) == 1
+    assert (destination / "good.json").exists()
+
+
+def test_main_bulk_unknown_only_exits_nonzero(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / "in"
+    source.mkdir()
+    (source / "mystery.bin").write_text("not a transcript")
+    destination = tmp_path / "out"
+
+    assert main([str(source), str(destination)]) == 1
 
 
 def test_main_ignore_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
