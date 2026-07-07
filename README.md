@@ -3,7 +3,6 @@
 [![PyPI](https://img.shields.io/pypi/v/podcast-transcript-convert.svg)](https://pypi.org/project/podcast-transcript-convert/)
 [![Lint and Test](https://github.com/hbmartin/podcast-transcript-convert/actions/workflows/lint.yml/badge.svg)](https://github.com/hbmartin/podcast-transcript-convert/actions/workflows/lint.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Code style: black](https://img.shields.io/badge/🐧️-black-000000.svg)](https://github.com/psf/black)
 [![Types: ty + pyrefly](https://img.shields.io/badge/types-ty%20%2B%20pyrefly-261230.svg)](https://github.com/astral-sh/ty)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13%2B-blue.svg)](https://pypi.org/project/podcast-transcript-convert/)
 [![twitter](https://img.shields.io/badge/@hmartin-00aced.svg?logo=twitter&logoColor=black)](https://twitter.com/hmartin)
@@ -106,10 +105,11 @@ uv run transcript2json ~/Downloads/overcast-to-sqlite/archive/transcripts conver
 
 ### Code Quality
 
-This project is linted with [ruff](https://docs.astral.sh/ruff/), uses [Black](https://github.com/ambv/black) code formatting, and is type checked with [ty](https://github.com/astral-sh/ty) and [pyrefly](https://pyrefly.org/).
+This project is linted and formatted with [ruff](https://docs.astral.sh/ruff/) and type checked with [ty](https://github.com/astral-sh/ty) and [pyrefly](https://pyrefly.org/).
 
 ```bash
 uv run ruff check .
+uv run ruff format --check .
 uv run ty check podcast_transcript_convert
 uv run pyrefly check
 ```

@@ -16,11 +16,9 @@ jobs:
         enable-cache: true
     - run: uv sync --group dev
     - run: uv run ruff check .
+    - run: uv run ruff format --check .
     - run: uv run ty check podcast_transcript_convert
     - run: uv run pyrefly check
-    - uses: psf/black@stable
-      with:
-        options: "--check --verbose"
     - run: uv run pytest --cov=podcast_transcript_convert --cov-report=term-missing
-    - run: uv run pyroma . --min=10
+    - run: uv build
     - run: "uv run python -m podcast_transcript_convert --help | grep -q 'usage: transcript2json'"
