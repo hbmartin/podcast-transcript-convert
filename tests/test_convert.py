@@ -120,7 +120,9 @@ def test_bulk_convert_records_missing_vtt_as_failure(
         missing_vtt_from_db,
     )
 
-    summary = convert_module.bulk_convert(str(tmp_path / "overcast.db"), str(destination))
+    summary = convert_module.bulk_convert(
+        str(tmp_path / "overcast.db"), str(destination)
+    )
 
     assert summary.converted == []
     assert [src for src, _ in summary.failed] == [str(missing)]
