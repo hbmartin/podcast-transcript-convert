@@ -106,6 +106,20 @@ def test_bulk_convert_continues_after_failure(tmp_path: Path):
     assert (destination / "good.json").exists()
 
 
+def test_bulk_convert_records_invalid_json_as_failure(tmp_path: Path):
+    source = tmp_path / "in"
+    source.mkdir()
+    invalid_json = source / "bad.json"
+    invalid_json.write_text(json.dumps({"version": "1.0.0"}))
+    destination = tmp_path / "out"
+
+    summary = bulk_convert(str(source), str(destination))
+
+    assert summary.converted == []
+    assert [src for src, _ in summary.failed] == [str(invalid_json)]
+    assert not (destination / "bad.json").exists()
+
+
 def test_bulk_convert_records_missing_vtt_as_failure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -16,6 +16,13 @@ class InvalidHtmlError(TranscriptConversionError):
         super().__init__("The provided HTML file is not a valid transcript.")
 
 
+class InvalidJsonError(TranscriptConversionError):
+    """The JSON cannot be parsed as a PodcastIndex transcript."""
+
+    def __init__(self) -> None:
+        super().__init__("The provided JSON file is not a valid transcript.")
+
+
 class InvalidXmlError(TranscriptConversionError):
     """The XML does not conform to http://podlove.org/simple-transcripts ."""
 
