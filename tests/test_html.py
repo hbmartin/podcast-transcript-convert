@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -7,7 +8,7 @@ from podcast_transcript_convert.converters.html_to_json import (
     html_file_to_json_file,
     html_to_podcast_dict,
 )
-from podcast_transcript_convert.errors import InvalidHtmlError
+from podcast_transcript_convert.errors import InvalidHtmlError, NoTranscriptFoundError
 
 
 def test__ts_to_secs():
@@ -86,6 +87,41 @@ def test_html_to_podcast_dict_with_ts_looking_in_body():
 def test_html_to_podcast_dict_empty():
     with pytest.raises(InvalidHtmlError):
         html_to_podcast_dict("")
+
+
+def test_html_to_podcast_dict_no_usable_transcript_content():
+    # "<time>" as a substring passes the format gate, but the parsed document
+    # holds no cite/time/p content, so no segment is populated.
+    html_string = "<!-- <time> --><div>hello</div>"
+    with pytest.raises(NoTranscriptFoundError):
+        html_to_podcast_dict(html_string)
+
+
+def test_html_file_to_json_file_writes_json_with_metadata(tmp_path: Path):
+    source = tmp_path / "ep.html"
+    source.write_text(
+        "<html><body><cite>Ann:</cite><p>Hello there</p></body></html>",
+    )
+    destination = tmp_path / "ep.json"
+
+    html_file_to_json_file(source, destination, {"title": "Episode 1"})
+
+    data = json.loads(destination.read_text())
+    assert data["metadata"] == {"title": "Episode 1"}
+    assert data["segments"][0]["speaker"] == "Ann"
+    assert data["segments"][0]["body"] == "Hello there"
+
+
+def test_html_file_to_json_file_invalid_raises_and_writes_nothing(tmp_path: Path):
+    source = tmp_path / "bad.html"
+    source.write_text("<html><body><p>no cite or time here</p></body></html>")
+    destination = tmp_path / "out.json"
+
+    with pytest.raises(InvalidHtmlError) as excinfo:
+        html_file_to_json_file(source, destination, None)
+
+    assert str(source) in excinfo.value.__notes__
+    assert not destination.exists()
 
 
 def test_html_file_to_json_file_missing_file_raises(tmp_path: Path):

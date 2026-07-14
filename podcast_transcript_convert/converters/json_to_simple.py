@@ -36,7 +36,7 @@ def json_file_to_simple_file(
         raise
 
     try:
-        segments = map(_segment_to_line, data["segments"])
+        segments = [_segment_to_line(segment) for segment in data["segments"]]
     except NoStartTimeError as e:
         e.add_note(str(origin_file))
         raise
