@@ -21,6 +21,7 @@ def json_file_to_json_file(
         not isinstance(data, dict)
         or not isinstance(data.get("version"), str)
         or not isinstance(data.get("segments"), list)
+        or not all(isinstance(segment, dict) for segment in data["segments"])
     ):
         error = InvalidJsonError()
         error.add_note(str(origin_file))

@@ -66,6 +66,7 @@ def test_json_file_to_json_file_missing_segments_raises(tmp_path: Path):
         [],
         {"version": 1, "segments": []},
         {"version": "1.0.0", "segments": {}},
+        {"version": "1.0.0", "segments": ["invalid"]},
     ],
 )
 def test_json_file_to_json_file_invalid_schema_types_raise(
