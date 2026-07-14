@@ -45,8 +45,20 @@ def test_json_file_to_simple_file_without_start_time(tmp_path: Path):
     origin = tmp_path / "ep.json"
     origin.write_text(json.dumps({"segments": [{"body": "Hello."}]}))
 
-    with pytest.raises(NoStartTimeError):
+    with pytest.raises(NoStartTimeError) as excinfo:
         json_file_to_simple_file(origin, tmp_path / "ep.txt")
+
+    assert str(origin) in excinfo.value.__notes__
+
+
+def test_json_file_to_simple_file_invalid_json_raises(tmp_path: Path):
+    origin = tmp_path / "ep.json"
+    origin.write_text("{not valid json")
+
+    with pytest.raises(json.JSONDecodeError) as excinfo:
+        json_file_to_simple_file(origin, tmp_path / "ep.txt")
+
+    assert str(origin) in excinfo.value.__notes__
 
 
 def test_transcript_file_to_simple_file(tmp_path: Path):

@@ -1,12 +1,16 @@
+import json
 from pathlib import Path
 
 import pytest
 
 from podcast_transcript_convert.converters.srt_to_json import (
     _mts_to_secs_float,
+    srt_file_to_json_file,
     srt_to_podcast_dict,
 )
 from podcast_transcript_convert.errors import InvalidSrtError
+
+VALID_SRT = "1\n00:00:00,000 --> 00:00:01,000\nMichael: Hello world.\n\n"
 
 
 def test__mts_to_secs_float():
@@ -81,3 +85,28 @@ def test_srt_to_podcast_dict_with_newlines_in_body():
 def test_srt_to_podcast_dict_invalid():
     with pytest.raises(InvalidSrtError):
         srt_to_podcast_dict("whatever")
+
+
+def test_srt_file_to_json_file_with_metadata(tmp_path: Path):
+    source = tmp_path / "ep.srt"
+    source.write_text(VALID_SRT)
+    destination = tmp_path / "ep.json"
+
+    srt_file_to_json_file(source, destination, {"title": "Episode 1"})
+
+    data = json.loads(destination.read_text())
+    assert data["metadata"] == {"title": "Episode 1"}
+    assert data["segments"][0]["speaker"] == "Michael"
+    assert data["segments"][0]["body"] == "Hello world."
+
+
+def test_srt_file_to_json_file_invalid_raises_and_writes_nothing(tmp_path: Path):
+    source = tmp_path / "bad.srt"
+    source.write_text("this is not valid srt")
+    destination = tmp_path / "out.json"
+
+    with pytest.raises(InvalidSrtError) as excinfo:
+        srt_file_to_json_file(source, destination, None)
+
+    assert str(source) in excinfo.value.__notes__
+    assert not destination.exists()

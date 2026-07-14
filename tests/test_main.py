@@ -1,9 +1,14 @@
 import json
+import runpy
+import sys
+from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 
 import pytest
+from loguru import logger
 
-from podcast_transcript_convert.__main__ import build_parser, main
+import podcast_transcript_convert.__main__ as main_module
+from podcast_transcript_convert.__main__ import _package_version, build_parser, main
 
 VALID_SRT = "1\n00:00:00,000 --> 00:00:01,000\nMichael: Hello world.\n\n"
 
@@ -155,3 +160,50 @@ def test_main_default_transcriptignore(tmp_path: Path, monkeypatch: pytest.Monke
     assert main([str(source), str(destination)]) == 0
     assert (destination / "ep.json").exists()
     assert not (destination / "skipme.json").exists()
+
+
+def test_main_quiet_flag(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / "ep.srt"
+    source.write_text(VALID_SRT)
+    destination = tmp_path / "out"
+
+    try:
+        assert main(["--quiet", str(source), str(destination)]) == 0
+    finally:
+        # main(--quiet) reconfigures the global loguru logger; restore a
+        # default handler so it does not leak into other tests.
+        logger.remove()
+        logger.add(sys.stderr)
+
+    assert (destination / "ep.json").exists()
+
+
+def test_package_version_returns_installed_version():
+    assert _package_version() != "unknown"
+
+
+def test_package_version_unknown_when_not_installed(monkeypatch: pytest.MonkeyPatch):
+    def raise_not_found(_name: str) -> str:
+        raise PackageNotFoundError
+
+    monkeypatch.setattr(main_module, "version", raise_not_found)
+    assert _package_version() == "unknown"
+
+
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
+def test_module_entrypoint_runs_main(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    source = tmp_path / "ep.srt"
+    source.write_text(VALID_SRT)
+    destination = tmp_path / "converted.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["transcript2json", str(source), str(destination)],
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        runpy.run_module("podcast_transcript_convert.__main__", run_name="__main__")
+
+    assert excinfo.value.code == 0
+    assert destination.exists()

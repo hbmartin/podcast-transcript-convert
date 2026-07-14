@@ -1,6 +1,20 @@
+import json
 from pathlib import Path
 
-from podcast_transcript_convert.converters.xml_to_json import xml_to_podcast_dict
+import pytest
+
+from podcast_transcript_convert.converters.xml_to_json import (
+    xml_file_to_json_file,
+    xml_to_podcast_dict,
+)
+from podcast_transcript_convert.errors import InvalidXmlError, NoTranscriptFoundError
+
+PODLOVE_XML = (
+    '<?xml version="1.0"?>'
+    '<podcast:transcripts xmlns:podcast="http://podlove.org/simple-transcripts">'
+    '<speech><item start="00:00:00.000" end="00:00:01.000">Hello</item></speech>'
+    "</podcast:transcripts>"
+)
 
 
 def test_xml_to_podcast_dict():
@@ -36,3 +50,53 @@ def test_xml_to_podcast_dict_drops_empty_speech_segments():
     assert transcript_dict["segments"] == [
         {"startTime": 0.0, "endTime": 1.0, "body": "Hello"},
     ]
+
+
+def test_xml_to_podcast_dict_not_podlove_raises():
+    with pytest.raises(InvalidXmlError):
+        xml_to_podcast_dict('<?xml version="1.0"?><root><speech/></root>')
+
+
+def test_xml_to_podcast_dict_without_transcripts_tag_raises():
+    xml_string = (
+        '<?xml version="1.0"?>'
+        '<root xmlns:podcast="http://podlove.org/simple-transcripts">'
+        "<other>hi</other></root>"
+    )
+    with pytest.raises(NoTranscriptFoundError):
+        xml_to_podcast_dict(xml_string)
+
+
+def test_xml_to_podcast_dict_only_empty_speech_raises():
+    xml_string = (
+        '<?xml version="1.0"?>'
+        '<podcast:transcripts xmlns:podcast="http://podlove.org/simple-transcripts">'
+        "<speech></speech>"
+        "</podcast:transcripts>"
+    )
+    with pytest.raises(NoTranscriptFoundError):
+        xml_to_podcast_dict(xml_string)
+
+
+def test_xml_file_to_json_file_writes_json_with_metadata(tmp_path: Path):
+    source = tmp_path / "ep.xml"
+    source.write_text(PODLOVE_XML)
+    destination = tmp_path / "ep.json"
+
+    xml_file_to_json_file(source, destination, {"title": "Episode 1"})
+
+    data = json.loads(destination.read_text())
+    assert data["metadata"] == {"title": "Episode 1"}
+    assert data["segments"][0]["body"] == "Hello"
+
+
+def test_xml_file_to_json_file_invalid_raises_and_writes_nothing(tmp_path: Path):
+    source = tmp_path / "bad.xml"
+    source.write_text('<?xml version="1.0"?><root></root>')
+    destination = tmp_path / "out.json"
+
+    with pytest.raises(InvalidXmlError) as excinfo:
+        xml_file_to_json_file(source, destination, None)
+
+    assert str(source) in excinfo.value.__notes__
+    assert not destination.exists()

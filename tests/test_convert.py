@@ -32,6 +32,13 @@ def test_destination_path_without_source_root_uses_parent_name():
     assert dest == Path("/out/show/ep.json")
 
 
+def test_destination_path_source_root_not_ancestor_falls_back():
+    # The source is not under source_root, so relative_to raises and the
+    # parent-directory-name fallback is used instead.
+    dest = _destination_path("/other/show/ep.srt", "/out", source_root="/src")
+    assert dest == Path("/out/show/ep.json")
+
+
 def test_destination_path_bare_filename():
     assert _destination_path("ep.srt", "/out") == Path("/out/ep.json")
     assert _destination_path("/ep.srt", "/out") == Path("/out/ep.json")

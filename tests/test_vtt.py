@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,8 @@ from podcast_transcript_convert.converters.vtt_to_json import (
     vtt_to_podcast_dict,
 )
 from podcast_transcript_convert.errors import InvalidVttError
+
+VALID_VTT = "WEBVTT\n\n00:00.000 --> 00:01.000\nHello from VTT.\n"
 
 
 def test_vtt_to_podcast_dict_with_speaker_tags():
@@ -72,6 +75,30 @@ def test_vtt_to_podcast_dict_with_numbered_blocks():
 def test_vtt_to_podcast_dict_with_invalid():
     with pytest.raises(InvalidVttError):
         vtt_to_podcast_dict("")
+
+
+def test_vtt_file_to_json_file_with_metadata(tmp_path: Path):
+    source = tmp_path / "ep.vtt"
+    source.write_text(VALID_VTT)
+    destination = tmp_path / "ep.json"
+
+    vtt_file_to_json_file(source, destination, {"title": "Episode 1"})
+
+    data = json.loads(destination.read_text())
+    assert data["metadata"] == {"title": "Episode 1"}
+    assert data["segments"][0]["body"] == "Hello from VTT."
+
+
+def test_vtt_file_to_json_file_invalid_raises_and_writes_nothing(tmp_path: Path):
+    source = tmp_path / "bad.vtt"
+    source.write_text("this is not a valid vtt file")
+    destination = tmp_path / "out.json"
+
+    with pytest.raises(InvalidVttError) as excinfo:
+        vtt_file_to_json_file(source, destination, None)
+
+    assert str(source) in excinfo.value.__notes__
+    assert not destination.exists()
 
 
 def test_vtt_file_to_json_file_missing_file_raises(tmp_path: Path):
