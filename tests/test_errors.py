@@ -1,5 +1,6 @@
 from podcast_transcript_convert.errors import (
     InvalidHtmlError,
+    InvalidJsonError,
     InvalidSrtError,
     InvalidVttError,
     InvalidXmlError,
@@ -13,6 +14,7 @@ from podcast_transcript_convert.errors import (
 def test_all_errors_are_transcript_conversion_errors():
     for error in (
         InvalidHtmlError(),
+        InvalidJsonError(),
         InvalidXmlError(),
         NoTranscriptFoundError(),
         InvalidSrtError("bad block"),
@@ -27,6 +29,10 @@ def test_all_errors_are_transcript_conversion_errors():
 
 def test_invalid_xml_error_message():
     assert "XML" in InvalidXmlError().message
+
+
+def test_invalid_json_error_message():
+    assert "JSON" in InvalidJsonError().message
 
 
 def test_no_transcript_found_error_message():
